@@ -302,13 +302,25 @@ select.fi{cursor:pointer;}
     <div class="biglogo" style="font-size:36px;margin-top:-8px;">🌿</div>
     <div class="tagline">Compete. Build habits. Win together.</div>
 
-      <div class="card" style="margin-bottom:.75rem;">
+    <div class="snote">
+      <b>⚡ Real-time sync setup (free, 5 min):</b><br>
+      1. <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> → Create project<br>
+      2. Add Web App → copy the config object<br>
+      3. Realtime Database → Create → test mode<br>
+      4. Open this file in a text editor, paste config where it says <code>PASTE_YOUR_API_KEY</code>
+    </div>
+
+    <div class="card" style="margin-bottom:.75rem;">
       <div class="fredoka" style="font-size:18px;color:var(--p2);margin-bottom:.85rem;">🔗 Join a challenge</div>
       <input class="fi" id="joinCode" placeholder="Enter room code" maxlength="8" style="font-family:'Fredoka One',cursive;font-size:24px;letter-spacing:4px;text-align:center;text-transform:uppercase;margin-bottom:10px;"/>
       <button class="btn btn-primary" onclick="joinRoom()">Join Challenge</button>
     </div>
     <div class="divider">— or —</div>
     <button class="btn btn-amber" onclick="goSetup()">✨ Create New Challenge</button>
+    <div id="rejoinBox" style="display:none;margin-top:.75rem;">
+      <div class="divider">— or —</div>
+      <button class="btn btn-ghost" id="rejoinBtn" onclick="rejoinLast()" style="width:100%;">↩️ Rejoin last duel</button>
+    </div>
   </div>
 </div>
 
@@ -341,6 +353,7 @@ select.fi{cursor:pointer;}
       <div style="display:flex;align-items:center;gap:8px;">
         <div class="liveb"><div class="ldot"></div><span id="liveLbl">live</span></div>
         <div class="dpill">Day <b id="dayN">1</b>/<span id="totalDays">30</span></div>
+        <button class="btn btn-ghost btn-sm" onclick="leaveDuel()" title="Leave duel" style="padding:5px 10px;font-size:16px;border-radius:var(--rs);">🚪</button>
       </div>
     </div>
 
@@ -1010,23 +1023,70 @@ function renderCalendar(){
 
 function copyCode(){const c=state?.code||'';navigator.clipboard.writeText(c).then(()=>toast('📋 Code copied!')).catch(()=>toast('Code: '+c));}
 
+// Leave duel WITHOUT deleting data — just exit to home screen
+function leaveDuel(){
+  if(!confirm('Leave this duel? Your progress is saved — rejoin anytime with the room code.'))return;
+  if(unsubFn){unsubFn();unsubFn=null;}
+  // Clear only the localStorage session so auto-restore doesn't kick in
+  if(state)localStorage.removeItem(LS+state.code);
+  state=null;dbRef=null;lastSnap='';activeTab=0;
+  document.getElementById('joinCode').value='';
+  // Switch back to nav tab 0 visually
+  document.querySelectorAll('.bnav-item').forEach((el,j)=>el.classList.toggle('active',j===0));
+  ['tabHome','tabWeekly','tabPlayers','tabCalendar'].forEach((id,j)=>document.getElementById(id).style.display=j===0?'block':'none');
+  showS('sLand');
+  toast('👋 Left the duel — rejoin anytime with your code!');
+}
+
+// Reset = permanently delete all data
 function resetAll(){
-  if(!confirm('Reset everything? All progress will be gone. 🥺'))return;
+  if(!confirm('⚠️ This will DELETE all progress permanently for everyone. Are you sure?'))return;
   if(hasDB&&dbRef)dbRef.remove().catch(()=>{});
-  if(state)lsSave(state.code,null);
+  if(state)localStorage.removeItem(LS+state.code);
   if(unsubFn){unsubFn();unsubFn=null;}
   state=null;dbRef=null;lastSnap='';activeTab=0;
   document.getElementById('joinCode').value='';
+  document.querySelectorAll('.bnav-item').forEach((el,j)=>el.classList.toggle('active',j===0));
+  ['tabHome','tabWeekly','tabPlayers','tabCalendar'].forEach((id,j)=>document.getElementById(id).style.display=j===0?'block':'none');
   showS('sLand');
 }
 
 // ── INIT ──────────────────────────────────────────
+let lastSavedCode = null;
+
+function rejoinLast(){
+  if(!lastSavedCode)return;
+  const data=lsLoad(lastSavedCode);
+  if(data)go(lastSavedCode,data);
+  else{
+    // Try Firebase
+    showS('sLoad');
+    if(hasDB){
+      db.ref('rooms/'+lastSavedCode).get().then(snap=>{const v=snap.val();if(v)go(lastSavedCode,v);else{toast('Room not found!');showS('sLand');}}).catch(()=>{toast('Connection error!');showS('sLand');});
+    } else {toast('Room not found!');showS('sLand');}
+  }
+}
+
 (function(){
+  // Check Firebase config
+  const fbReady = FIREBASE_CONFIG.apiKey !== 'PASTE_YOUR_API_KEY';
+  // Find any saved session codes
   const keys=Object.keys(localStorage).filter(k=>k.startsWith(LS)&&k.length>LS.length);
   if(keys.length){
     try{
+      const code = keys[keys.length-1].replace(LS,'');
       const data=JSON.parse(localStorage.getItem(keys[keys.length-1]));
-      if(data&&data.code&&data.players&&data.players.length>=2){go(data.code,data);return;}
+      if(data&&data.code&&data.players&&data.players.length>=2){
+        lastSavedCode=code;
+        // Show rejoin button instead of auto-restoring
+        const box=document.getElementById('rejoinBox');
+        const btn=document.getElementById('rejoinBtn');
+        if(box&&btn){
+          const names=data.players.map(p=>p.name).join(' vs ');
+          btn.textContent=`↩️ Rejoin: ${names} (${code})`;
+          box.style.display='block';
+        }
+      }
     }catch(e){}
   }
 })();
