@@ -302,15 +302,7 @@ select.fi{cursor:pointer;}
     <div class="biglogo" style="font-size:36px;margin-top:-8px;">🌿</div>
     <div class="tagline">Compete. Build habits. Win together.</div>
 
-    <div class="snote">
-      <b>⚡ Real-time sync setup (free, 5 min):</b><br>
-      1. <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> → Create project<br>
-      2. Add Web App → copy the config object<br>
-      3. Realtime Database → Create → test mode<br>
-      4. Open this file in a text editor, paste config where it says <code>PASTE_YOUR_API_KEY</code>
-    </div>
-
-    <div class="card" style="margin-bottom:.75rem;">
+      <div class="card" style="margin-bottom:.75rem;">
       <div class="fredoka" style="font-size:18px;color:var(--p2);margin-bottom:.85rem;">🔗 Join a challenge</div>
       <input class="fi" id="joinCode" placeholder="Enter room code" maxlength="8" style="font-family:'Fredoka One',cursive;font-size:24px;letter-spacing:4px;text-align:center;text-transform:uppercase;margin-bottom:10px;"/>
       <button class="btn btn-primary" onclick="joinRoom()">Join Challenge</button>
@@ -408,7 +400,7 @@ select.fi{cursor:pointer;}
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyCUem9SYU-rNKEWBOBevf20KtwZJ0izUY0",
   authDomain: "habitapp-88e9d.firebaseapp.com",
-  databaseURL: "https://habitapp-88e9d-default-rtdb.firebaseio.com",
+  databaseURL: "https://habitapp-88e9d-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "habitapp-88e9d",
   storageBucket: "habitapp-88e9d.firebasestorage.app",
   messagingSenderId: "224562291973",
