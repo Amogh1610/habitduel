@@ -302,7 +302,9 @@ select.fi{cursor:pointer;}
     <div class="biglogo" style="font-size:36px;margin-top:-8px;">🌿</div>
     <div class="tagline">Compete. Build habits. Win together.</div>
 
-      <div class="card" style="margin-bottom:.75rem;">
+
+
+    <div class="card" style="margin-bottom:.75rem;">
       <div class="fredoka" style="font-size:18px;color:var(--p2);margin-bottom:.85rem;">🔗 Join a challenge</div>
       <input class="fi" id="joinCode" placeholder="Enter room code" maxlength="8" style="font-family:'Fredoka One',cursive;font-size:24px;letter-spacing:4px;text-align:center;text-transform:uppercase;margin-bottom:10px;"/>
       <button class="btn btn-primary" onclick="joinRoom()">Join Challenge</button>
@@ -656,7 +658,10 @@ function createChallenge(){
       habits:p.habits.map(h=>({name:h.name,category:h.category||'other',goal:h.goal||setupData.overallGoal,logs:{},extra:{}}))
     }))
   };
-  showS('sLoad');pushState();
+  showS('sLoad');
+  // Set dbRef FIRST so pushState can write to Firebase
+  if(hasDB){dbRef=db.ref('rooms/'+code);}
+  pushState();
   setTimeout(()=>{listenRoom(code,d=>{state=d;renderMain();});showS('sMain');renderMain();toast('🎉 Duel started! Code: '+code);},700);
 }
 
